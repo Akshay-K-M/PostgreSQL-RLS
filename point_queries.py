@@ -99,7 +99,7 @@ def execute_admin_sql(sql_script, step_name):
         print(f"[!] {step_name} failed: {e}")
         exit(1)
 
-def measure_queries(cur, query, key, iterations=5000, warmup=50):
+def measure_queries(cur, query, key, iterations=5000, warmup=500):
     for _ in range(warmup):
         cur.execute(query, (key,))
         cur.fetchall()
@@ -127,9 +127,9 @@ def main():
         execute_admin_sql(TEARDOWN_SQL, "Emergency Teardown")
         return
 
-    cur.execute("SET jit = off;")
-    cur.execute("SET max_parallel_workers_per_gather = 0;")
-    cur.execute("SET plan_cache_mode = force_generic_plan;")
+    # cur.execute("SET jit = off;")
+    # cur.execute("SET max_parallel_workers_per_gather = 0;")
+    # cur.execute("SET plan_cache_mode = force_generic_plan;")
 
     query = "SELECT o_orderkey FROM orders WHERE o_orderkey = %s;"
 
@@ -163,6 +163,10 @@ def main():
     plt.tight_layout()
     plt.savefig("rls_plot_clean_3_states.pdf")
     print("[+] Saved plot to 'rls_plot_clean_3_states.pdf'")
+
+    print(f"Q_k (Dummy/Missing): Mean = {sum(qk_timings)/len(qk_timings):.2f} μs, Std Dev = {((sum((x - sum(qk_timings)/len(qk_timings))**2 for x in qk_timings) / len(qk_timings))**0.5):.2f} μs")
+    print(f"Q_u (Unauthorized): Mean = {sum(qu_timings)/len(qu_timings):.2f} μs, Std Dev = {((sum((x - sum(qu_timings)/len(qu_timings))**2 for x in qu_timings) / len(qu_timings))**0.5):.2f} μs")
+    print(f"Q_a (Authorized): Mean = {sum(qa_timings)/len(qa_timings):.2f} μs, Std Dev = {((sum((x - sum(qa_timings)/len(qa_timings))**2 for x in qa_timings) / len(qa_timings))**0.5):.2f} μs")
 
 if __name__ == "__main__":
     main()
