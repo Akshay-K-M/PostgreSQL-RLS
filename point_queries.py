@@ -47,6 +47,8 @@ CREATE TABLE rls_user_clearance (
 INSERT INTO rls_user_clearance (username, allowed_segment) 
 VALUES ('rls_user', 'AUTOMOBILE');
 
+
+CREATE INDEX IF NOT EXISTS idx_orders_orderkey ON orders (o_orderkey);
 -- 3. Provision the fresh role
 CREATE ROLE rls_user WITH LOGIN PASSWORD 'attack_password';
 
@@ -74,6 +76,7 @@ TEARDOWN_SQL = """
 DROP POLICY IF EXISTS order_segment_policy ON orders;
 ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
 DROP TABLE IF EXISTS rls_user_clearance CASCADE;
+DROP INDEX IF EXISTS idx_orders_orderkey;
 
 -- Forcefully clean up the user and all granted privileges
 DO $$ 
@@ -106,10 +109,10 @@ def measure_queries(cur, query, key, iterations=5000, warmup=500):
         
     timings = []
     for _ in range(iterations):
-        start = time.perf_counter()
+        start = time.perf_counter_ns()
         cur.execute(query, (key,))
         cur.fetchall()
-        timings.append((time.perf_counter() - start) * 1e6)
+        timings.append((time.perf_counter_ns() - start) / 1000) # Convert to microseconds
         
     return timings
 
