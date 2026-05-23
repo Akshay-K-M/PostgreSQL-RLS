@@ -23,24 +23,23 @@ CONFIG = {
     "db_user": "rls_tester",
     "db_pass": "rls_tester_password", 
     
-    "test_clerk": "Clerk#000000001",
     "auth_key": 3682,        
     "unauth_key": 1,         
     "missing_key": -1        
 }
 
-ITERATION_RUNS = [100, 1000, 10000]
+ITERATION_RUNS = [50, 500, 5000]
 
 # ==============================================================================
 # TIMING FUNCTION
 # ==============================================================================
-def measure_query(conn, query, params, warmups, iterations, test_clerk):
+def measure_query(conn, query, params, warmups, iterations):
     times_us = []
     with conn.cursor() as cur:
-        cur.execute("SET rls.test_clerk = %s;", (test_clerk,))
         for _ in range(warmups):
             cur.execute(query, params)
             cur.fetchall()
+            
         for _ in range(iterations):
             start_time = time.perf_counter()
             cur.execute(query, params)
@@ -50,23 +49,37 @@ def measure_query(conn, query, params, warmups, iterations, test_clerk):
     return times_us
 
 # ==============================================================================
-# QUERY PLAN EXTRACTOR
+# QUERY PLAN & OUTPUT EXTRACTOR
 # ==============================================================================
-def save_query_plans(conn, query, test_cases, test_clerk, filename):
-    print(f"--- Extracting Query Plans to {filename} ---")
+def save_query_plans(conn, query, test_cases, filename):
+    print(f"--- Extracting Query Plans and Output to {filename} ---")
     with conn.cursor() as cur:
-        cur.execute("SET rls.test_clerk = %s;", (test_clerk,))
         with open(filename, "w") as f:
-            f.write(f"EXPLAIN ANALYZE Output - Variation {CONFIG['variation_id']}\n")
+            f.write(f"EXPLAIN ANALYZE & Query Output - Variation {CONFIG['variation_id']}\n")
             f.write("="*80 + "\n\n")
+            
             for access_type, key in test_cases.items():
                 f.write(f"--- Test Case: {access_type} (Key: {key}) ---\n")
+                
+                # 1. Capture Data Output
+                f.write("QUERY OUTPUT:\n")
+                cur.execute(query, (key,))
+                rows = cur.fetchall()
+                if not rows:
+                    f.write("(No rows returned - RLS filtered or key missing)\n")
+                else:
+                    for row in rows:
+                        f.write(str(row) + "\n")
+                f.write("\n")
+                
+                # 2. Capture Query Plan
+                f.write("EXPLAIN ANALYZE:\n")
                 explain_query = f"EXPLAIN ANALYZE {query}"
                 cur.execute(explain_query, (key,))
                 plan_lines = cur.fetchall()
                 for line in plan_lines:
                     f.write(line[0] + "\n")
-                f.write("\n")
+                f.write("\n" + "-"*80 + "\n\n")
 
 # ==============================================================================
 # MAIN EXECUTION
@@ -86,9 +99,9 @@ def main():
     query = "SELECT * FROM orders WHERE o_orderkey = %s;"
     test_cases = {"Authorized": CONFIG["auth_key"], "Unauthorized": CONFIG["unauth_key"], "Missing": CONFIG["missing_key"]}
 
-    # 1. Extract query plans
+    # Extract query plans and verify output first
     plan_filename = f"plan_{CONFIG['variation_id']}.txt"
-    save_query_plans(conn, query, test_cases, CONFIG["test_clerk"], plan_filename)
+    save_query_plans(conn, query, test_cases, plan_filename)
 
     all_runs_data = {}
     sns.set_theme(style="whitegrid") 
@@ -96,9 +109,8 @@ def main():
     fig.suptitle(f"RLS Execution Time Density - Variation {CONFIG['variation_id']}", fontsize=16, fontweight='bold')
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c'] 
 
-    # 2. Run benchmark loops
     for idx, iterations in enumerate(ITERATION_RUNS):
-        warmups = int(iterations * 0.05)
+        warmups = int(iterations * 0.10) # Restored to 10%
         print(f"\n>> Running block: {iterations} iterations ({warmups} warmups) <<")
         
         run_results = {}
@@ -107,7 +119,7 @@ def main():
 
         for access_type, key in test_cases.items():
             print(f"   Measuring '{access_type}' queries...")
-            times = measure_query(conn, query, (key,), warmups, iterations, CONFIG["test_clerk"])
+            times = measure_query(conn, query, (key,), warmups, iterations)
             plot_data.append(times)
             run_results[access_type] = {
                 "mean_time_us": round(statistics.mean(times), 3),
