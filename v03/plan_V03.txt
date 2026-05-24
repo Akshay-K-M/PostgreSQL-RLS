@@ -1,0 +1,63 @@
+EXPLAIN ANALYZE & Query Output - Variation V03
+================================================================================
+
+--- Test Case: Authorized (Key: 107094.44) ---
+QUERY OUTPUT:
+(3682, 31645, 'O', Decimal('107094.44'), datetime.date(1997, 1, 22), '2-HIGH', 'Clerk#000000001', 0, 'us ideas impress pinto beans? ac')
+
+EXPLAIN ANALYZE:
+Bitmap Heap Scan on orders  (cost=84.69..16726.90 rows=38 width=170) (actual time=0.562..1.745 rows=1.00 loops=1)
+  Recheck Cond: ((o_clerk)::text = 'Clerk#000000001'::text)
+  Filter: (o_totalprice = 107094.44)
+  Rows Removed by Filter: 1466
+  Heap Blocks: exact=1436
+  Buffers: shared hit=1440
+  ->  Bitmap Index Scan on idx_v03_policy  (cost=0.00..84.68 rows=7500 width=0) (actual time=0.226..0.226 rows=1467.00 loops=1)
+        Index Cond: ((o_clerk)::text = 'Clerk#000000001'::text)
+        Index Searches: 1
+        Buffers: shared hit=4
+Planning Time: 0.075 ms
+Execution Time: 1.768 ms
+
+--------------------------------------------------------------------------------
+
+--- Test Case: Unauthorized (Key: 937.13) ---
+QUERY OUTPUT:
+(No rows returned - RLS filtered or key missing)
+
+EXPLAIN ANALYZE:
+Bitmap Heap Scan on orders  (cost=84.69..16726.90 rows=38 width=170) (actual time=1.009..1.009 rows=0.00 loops=1)
+  Recheck Cond: ((o_clerk)::text = 'Clerk#000000001'::text)
+  Filter: (o_totalprice = 937.13)
+  Rows Removed by Filter: 1467
+  Heap Blocks: exact=1436
+  Buffers: shared hit=1440
+  ->  Bitmap Index Scan on idx_v03_policy  (cost=0.00..84.68 rows=7500 width=0) (actual time=0.116..0.116 rows=1467.00 loops=1)
+        Index Cond: ((o_clerk)::text = 'Clerk#000000001'::text)
+        Index Searches: 1
+        Buffers: shared hit=4
+Planning Time: 0.025 ms
+Execution Time: 1.021 ms
+
+--------------------------------------------------------------------------------
+
+--- Test Case: Missing (Key: 930) ---
+QUERY OUTPUT:
+(No rows returned - RLS filtered or key missing)
+
+EXPLAIN ANALYZE:
+Bitmap Heap Scan on orders  (cost=84.69..16726.90 rows=38 width=170) (actual time=1.073..1.073 rows=0.00 loops=1)
+  Recheck Cond: ((o_clerk)::text = 'Clerk#000000001'::text)
+  Filter: (o_totalprice = '930'::numeric)
+  Rows Removed by Filter: 1467
+  Heap Blocks: exact=1436
+  Buffers: shared hit=1440
+  ->  Bitmap Index Scan on idx_v03_policy  (cost=0.00..84.68 rows=7500 width=0) (actual time=0.152..0.152 rows=1467.00 loops=1)
+        Index Cond: ((o_clerk)::text = 'Clerk#000000001'::text)
+        Index Searches: 1
+        Buffers: shared hit=4
+Planning Time: 0.053 ms
+Execution Time: 1.088 ms
+
+--------------------------------------------------------------------------------
+
