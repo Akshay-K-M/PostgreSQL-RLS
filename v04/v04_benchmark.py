@@ -11,11 +11,11 @@ import re
 # CONFIGURATION
 # ==============================================================================
 CONFIG = {
-    "variation_id": "V01",
+    "variation_id": "V04",
     "policy_type": "inline",
     "table_size": "large",
-    "has_query_index": True,
-    "has_policy_index": True,
+    "has_query_index": False, # False for V04: Querying unindexed o_totalprice
+    "has_policy_index": False, # False for V04: No index on o_clerk
     
     "db_host": "localhost",
     "db_port": "5432",
@@ -23,9 +23,10 @@ CONFIG = {
     "db_user": "rls_tester",
     "db_pass": "rls_tester_password", 
     
-    "auth_key": 3682,        
-    "unauth_key": 1,         
-    "missing_key": -1        
+    # Test Data Parameters 
+    "auth_key": 107094.44,   # A totalprice belonging to an order by Clerk#000000001
+    "unauth_key": 937.13,  # A totalprice belonging to a DIFFERENT clerk
+    "missing_key": 930     # A totalprice that does not exist   
 }
 
 ITERATION_RUNS = [50, 500, 5000]
@@ -96,7 +97,8 @@ def main():
         print(f"Database connection failed: {e}")
         return
 
-    query = "SELECT * FROM orders WHERE o_orderkey = %s;"
+    # Hit the unindexed o_totalprice column
+    query = "SELECT * FROM orders WHERE o_totalprice = %s;"
     test_cases = {"Authorized": CONFIG["auth_key"], "Unauthorized": CONFIG["unauth_key"], "Missing": CONFIG["missing_key"]}
 
     # Extract query plans and verify output first
@@ -110,7 +112,7 @@ def main():
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c'] 
 
     for idx, iterations in enumerate(ITERATION_RUNS):
-        warmups = int(iterations * 0.10) # 10% warmups yields 5, 50, 500
+        warmups = int(iterations * 0.10)
         print(f"\n>> Running block: {iterations} iterations ({warmups} warmups) <<")
         
         run_results = {}

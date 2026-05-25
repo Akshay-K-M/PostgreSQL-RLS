@@ -1,33 +1,49 @@
-EXPLAIN ANALYZE Output - Variation V01
+EXPLAIN ANALYZE & Query Output - Variation V01
 ================================================================================
 
 --- Test Case: Authorized (Key: 3682) ---
-Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=1.010..1.012 rows=1.00 loops=1)
+QUERY OUTPUT:
+(3682, 31645, 'O', Decimal('107094.44'), datetime.date(1997, 1, 22), '2-HIGH', 'Clerk#000000001', 0, 'us ideas impress pinto beans? ac')
+
+EXPLAIN ANALYZE:
+Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.011..0.012 rows=1.00 loops=1)
   Index Cond: (o_orderkey = 3682)
-  Filter: ((o_clerk)::text = current_setting('rls.test_clerk'::text, true))
+  Filter: ((o_clerk)::text = 'Clerk#000000001'::text)
   Index Searches: 1
-  Buffers: shared hit=3 read=4
-Planning:
-  Buffers: shared hit=120 read=1
-Planning Time: 3.148 ms
-Execution Time: 1.727 ms
+  Buffers: shared hit=4
+Planning Time: 0.080 ms
+Execution Time: 0.032 ms
+
+--------------------------------------------------------------------------------
 
 --- Test Case: Unauthorized (Key: 1) ---
-Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.137..0.137 rows=0.00 loops=1)
+QUERY OUTPUT:
+(No rows returned - RLS filtered or key missing)
+
+EXPLAIN ANALYZE:
+Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.007..0.007 rows=0.00 loops=1)
   Index Cond: (o_orderkey = 1)
-  Filter: ((o_clerk)::text = current_setting('rls.test_clerk'::text, true))
+  Filter: ((o_clerk)::text = 'Clerk#000000001'::text)
   Rows Removed by Filter: 1
   Index Searches: 1
-  Buffers: shared hit=2 read=2
-Planning Time: 0.163 ms
-Execution Time: 0.159 ms
+  Buffers: shared hit=4
+Planning Time: 0.036 ms
+Execution Time: 0.015 ms
+
+--------------------------------------------------------------------------------
 
 --- Test Case: Missing (Key: -1) ---
-Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.008..0.008 rows=0.00 loops=1)
+QUERY OUTPUT:
+(No rows returned - RLS filtered or key missing)
+
+EXPLAIN ANALYZE:
+Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.004..0.004 rows=0.00 loops=1)
   Index Cond: (o_orderkey = '-1'::integer)
-  Filter: ((o_clerk)::text = current_setting('rls.test_clerk'::text, true))
+  Filter: ((o_clerk)::text = 'Clerk#000000001'::text)
   Index Searches: 1
   Buffers: shared hit=3
-Planning Time: 0.067 ms
-Execution Time: 0.020 ms
+Planning Time: 0.030 ms
+Execution Time: 0.011 ms
+
+--------------------------------------------------------------------------------
 

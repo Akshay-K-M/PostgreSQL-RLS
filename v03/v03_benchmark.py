@@ -23,7 +23,7 @@ CONFIG = {
     "db_user": "rls_tester",
     "db_pass": "rls_tester_password", 
     
-    # Test Data Parameters (Replace with actual TPC-H o_totalprice values if needed)
+    # Test Data Parameters 
     "auth_key": 107094.44,   # A totalprice belonging to an order by Clerk#000000001
     "unauth_key": 937.13,  # A totalprice belonging to a DIFFERENT clerk
     "missing_key": 930     # A totalprice that does not exist

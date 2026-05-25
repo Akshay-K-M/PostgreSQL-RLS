@@ -6,13 +6,13 @@ QUERY OUTPUT:
 (3682, 31645, 'O', Decimal('107094.44'), datetime.date(1997, 1, 22), '2-HIGH', 'Clerk#000000001', 0, 'us ideas impress pinto beans? ac')
 
 EXPLAIN ANALYZE:
-Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.008..0.009 rows=1.00 loops=1)
+Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.010..0.011 rows=1.00 loops=1)
   Index Cond: (o_orderkey = 3682)
   Filter: ((o_clerk)::text = 'Clerk#000000001'::text)
   Index Searches: 1
   Buffers: shared hit=4
-Planning Time: 0.072 ms
-Execution Time: 0.032 ms
+Planning Time: 0.071 ms
+Execution Time: 0.033 ms
 
 --------------------------------------------------------------------------------
 
@@ -21,14 +21,14 @@ QUERY OUTPUT:
 (No rows returned - RLS filtered or key missing)
 
 EXPLAIN ANALYZE:
-Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.012..0.012 rows=0.00 loops=1)
+Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.006..0.006 rows=0.00 loops=1)
   Index Cond: (o_orderkey = 1)
   Filter: ((o_clerk)::text = 'Clerk#000000001'::text)
   Rows Removed by Filter: 1
   Index Searches: 1
   Buffers: shared hit=4
-Planning Time: 0.056 ms
-Execution Time: 0.040 ms
+Planning Time: 0.033 ms
+Execution Time: 0.014 ms
 
 --------------------------------------------------------------------------------
 
@@ -37,13 +37,13 @@ QUERY OUTPUT:
 (No rows returned - RLS filtered or key missing)
 
 EXPLAIN ANALYZE:
-Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.011..0.011 rows=0.00 loops=1)
+Index Scan using orders_pkey on orders  (cost=0.43..8.45 rows=1 width=170) (actual time=0.008..0.008 rows=0.00 loops=1)
   Index Cond: (o_orderkey = '-1'::integer)
   Filter: ((o_clerk)::text = 'Clerk#000000001'::text)
   Index Searches: 1
   Buffers: shared hit=3
-Planning Time: 0.095 ms
-Execution Time: 0.025 ms
+Planning Time: 0.028 ms
+Execution Time: 0.015 ms
 
 --------------------------------------------------------------------------------
 

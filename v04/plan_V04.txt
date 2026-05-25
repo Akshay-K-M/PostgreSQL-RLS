@@ -1,0 +1,57 @@
+EXPLAIN ANALYZE & Query Output - Variation V04
+================================================================================
+
+--- Test Case: Authorized (Key: 107094.44) ---
+QUERY OUTPUT:
+(3682, 31645, 'O', Decimal('107094.44'), datetime.date(1997, 1, 22), '2-HIGH', 'Clerk#000000001', 0, 'us ideas impress pinto beans? ac')
+
+EXPLAIN ANALYZE:
+Gather  (cost=1000.00..37138.80 rows=38 width=170) (actual time=128.012..131.824 rows=1.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=15829 read=10931
+  ->  Parallel Seq Scan on orders  (cost=0.00..36135.00 rows=16 width=170) (actual time=112.807..119.329 rows=0.33 loops=3)
+        Filter: (((o_clerk)::text = 'Clerk#000000001'::text) AND (o_totalprice = 107094.44))
+        Rows Removed by Filter: 500000
+        Buffers: shared hit=15829 read=10931
+Planning Time: 0.107 ms
+Execution Time: 132.019 ms
+
+--------------------------------------------------------------------------------
+
+--- Test Case: Unauthorized (Key: 937.13) ---
+QUERY OUTPUT:
+(No rows returned - RLS filtered or key missing)
+
+EXPLAIN ANALYZE:
+Gather  (cost=1000.00..37138.80 rows=38 width=170) (actual time=85.498..88.972 rows=0.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=15855 read=10905
+  ->  Parallel Seq Scan on orders  (cost=0.00..36135.00 rows=16 width=170) (actual time=76.874..76.874 rows=0.00 loops=3)
+        Filter: (((o_clerk)::text = 'Clerk#000000001'::text) AND (o_totalprice = 937.13))
+        Rows Removed by Filter: 500000
+        Buffers: shared hit=15855 read=10905
+Planning Time: 0.083 ms
+Execution Time: 88.997 ms
+
+--------------------------------------------------------------------------------
+
+--- Test Case: Missing (Key: 930) ---
+QUERY OUTPUT:
+(No rows returned - RLS filtered or key missing)
+
+EXPLAIN ANALYZE:
+Gather  (cost=1000.00..37138.80 rows=38 width=170) (actual time=82.453..85.735 rows=0.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=15994 read=10766 written=8
+  ->  Parallel Seq Scan on orders  (cost=0.00..36135.00 rows=16 width=170) (actual time=73.852..73.852 rows=0.00 loops=3)
+        Filter: (((o_clerk)::text = 'Clerk#000000001'::text) AND (o_totalprice = '930'::numeric))
+        Rows Removed by Filter: 500000
+        Buffers: shared hit=15994 read=10766 written=8
+Planning Time: 0.096 ms
+Execution Time: 85.755 ms
+
+--------------------------------------------------------------------------------
+
