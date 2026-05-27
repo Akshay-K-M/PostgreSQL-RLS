@@ -1,0 +1,69 @@
+EXPLAIN ANALYZE & Query Output - Variation V06
+================================================================================
+
+--- Test Case: Authorized (Key: 4379.44) ---
+QUERY OUTPUT:
+(1497952, 27232, 'F', Decimal('4379.44'), datetime.date(1992, 7, 11), '4-NOT SPECIFIED', 'Clerk#000000001', 0, 's: furiously express platelets use blithely according to the fluffily ir')
+
+QUERY PLAN:
+Gather  (cost=1001.02..37136.12 rows=1 width=108) (actual time=39.053..138.134 rows=1.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=15810 read=10953
+  ->  Parallel Seq Scan on orders  (cost=1.02..36136.02 rows=1 width=108) (actual time=90.784..122.131 rows=0.33 loops=3)
+        Filter: ((ANY ((o_clerk)::text = (hashed SubPlan 1).col1)) AND (o_totalprice = 4379.44))
+        Rows Removed by Filter: 500000
+        Buffers: shared hit=15810 read=10953
+        SubPlan 1
+          ->  Seq Scan on rls_mapping  (cost=0.00..1.01 rows=1 width=16) (actual time=0.128..0.129 rows=1.00 loops=3)
+                Filter: (db_user = CURRENT_USER)
+                Buffers: shared hit=3
+Planning Time: 0.138 ms
+Execution Time: 138.365 ms
+
+================================================================================
+
+--- Test Case: Unauthorized (Key: 163243.98) ---
+QUERY OUTPUT:
+(No rows returned)
+
+QUERY PLAN:
+Gather  (cost=1001.02..37136.12 rows=1 width=108) (actual time=120.779..124.493 rows=0.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=15845 read=10918 written=2
+  ->  Parallel Seq Scan on orders  (cost=1.02..36136.02 rows=1 width=108) (actual time=110.957..110.962 rows=0.00 loops=3)
+        Filter: ((ANY ((o_clerk)::text = (hashed SubPlan 1).col1)) AND (o_totalprice = 163243.98))
+        Rows Removed by Filter: 500000
+        Buffers: shared hit=15845 read=10918 written=2
+        SubPlan 1
+          ->  Seq Scan on rls_mapping  (cost=0.00..1.01 rows=1 width=16) (actual time=0.046..0.047 rows=1.00 loops=3)
+                Filter: (db_user = CURRENT_USER)
+                Buffers: shared hit=3
+Planning Time: 0.116 ms
+Execution Time: 124.529 ms
+
+================================================================================
+
+--- Test Case: Missing (Key: -1.0) ---
+QUERY OUTPUT:
+(No rows returned)
+
+QUERY PLAN:
+Gather  (cost=1001.02..37136.12 rows=1 width=108) (actual time=116.766..120.456 rows=0.00 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=15969 read=10794 written=9
+  ->  Parallel Seq Scan on orders  (cost=1.02..36136.02 rows=1 width=108) (actual time=107.031..107.038 rows=0.00 loops=3)
+        Filter: ((ANY ((o_clerk)::text = (hashed SubPlan 1).col1)) AND (o_totalprice = '-1.0'::numeric))
+        Rows Removed by Filter: 500000
+        Buffers: shared hit=15969 read=10794 written=9
+        SubPlan 1
+          ->  Seq Scan on rls_mapping  (cost=0.00..1.01 rows=1 width=16) (actual time=0.044..0.045 rows=1.00 loops=3)
+                Filter: (db_user = CURRENT_USER)
+                Buffers: shared hit=3
+Planning Time: 0.097 ms
+Execution Time: 120.484 ms
+
+================================================================================
+
