@@ -1,0 +1,81 @@
+EXPLAIN ANALYZE & Query Output - Variation V07
+================================================================================
+
+--- Test Case: Authorized (Key: 12345) ---
+QUERY OUTPUT:
+(814247, 12345, 2346, 2, Decimal('18.00'), Decimal('22632.12'), Decimal('0.05'), Decimal('0.05'), 'N', 'O', datetime.date(1995, 8, 8), datetime.date(1995, 5, 23), datetime.date(1995, 8, 20), 'COLLECT COD', 'AIR', ' pending foxes. p')
+(1467717, 12345, 2346, 5, Decimal('37.00'), Decimal('46521.58'), Decimal('0.04'), Decimal('0.04'), 'N', 'O', datetime.date(1995, 11, 14), datetime.date(1995, 12, 18), datetime.date(1995, 11, 26), 'NONE', 'SHIP', 'equests wake above the slyly ev')
+(2415842, 12345, 2346, 3, Decimal('17.00'), Decimal('21374.78'), Decimal('0.01'), Decimal('0.00'), 'N', 'O', datetime.date(1996, 9, 26), datetime.date(1996, 10, 22), datetime.date(1996, 10, 8), 'TAKE BACK RETURN', 'REG AIR', 'gular accounts. blithely entici')
+(2525250, 12345, 2346, 2, Decimal('37.00'), Decimal('46521.58'), Decimal('0.03'), Decimal('0.02'), 'N', 'O', datetime.date(1995, 9, 6), datetime.date(1995, 10, 6), datetime.date(1995, 9, 13), 'DELIVER IN PERSON', 'SHIP', 'ts wake carefully final theodo')
+(3763105, 12345, 2346, 3, Decimal('21.00'), Decimal('26404.14'), Decimal('0.00'), Decimal('0.01'), 'N', 'O', datetime.date(1995, 8, 17), datetime.date(1995, 6, 15), datetime.date(1995, 9, 6), 'DELIVER IN PERSON', 'REG AIR', 'ernes wake blithely')
+(4858405, 12345, 2346, 2, Decimal('38.00'), Decimal('47778.92'), Decimal('0.01'), Decimal('0.03'), 'N', 'O', datetime.date(1997, 8, 24), datetime.date(1997, 8, 11), datetime.date(1997, 9, 13), 'COLLECT COD', 'SHIP', 'uts nag about the carefully regular packag')
+(5607235, 12345, 2346, 5, Decimal('13.00'), Decimal('16345.42'), Decimal('0.08'), Decimal('0.04'), 'N', 'O', datetime.date(1996, 2, 11), datetime.date(1996, 1, 25), datetime.date(1996, 3, 3), 'NONE', 'TRUCK', 'nts cajole quickly pending, bol')
+
+QUERY PLAN:
+Bitmap Heap Scan on lineitem  (cost=5.68..124.65 rows=15 width=113) (actual time=0.031..0.044 rows=7.00 loops=1)
+  Recheck Cond: (l_partkey = 12345)
+  Filter: (ANY (l_suppkey = (hashed SubPlan 1).col1))
+  Rows Removed by Filter: 14
+  Heap Blocks: exact=21
+  Buffers: shared hit=25
+  ->  Bitmap Index Scan on idx_lineitem_partkey  (cost=0.00..4.66 rows=30 width=0) (actual time=0.008..0.009 rows=21.00 loops=1)
+        Index Cond: (l_partkey = 12345)
+        Index Searches: 1
+        Buffers: shared hit=3
+  SubPlan 1
+    ->  Seq Scan on rls_mapping  (cost=0.00..1.01 rows=1 width=4) (actual time=0.005..0.005 rows=1.00 loops=1)
+          Disabled: true
+          Filter: (db_user = CURRENT_USER)
+          Buffers: shared hit=1
+Planning Time: 0.116 ms
+Execution Time: 0.091 ms
+
+================================================================================
+
+--- Test Case: Unauthorized (Key: 67890) ---
+QUERY OUTPUT:
+(No rows returned)
+
+QUERY PLAN:
+Bitmap Heap Scan on lineitem  (cost=5.68..124.65 rows=15 width=113) (actual time=0.098..0.098 rows=0.00 loops=1)
+  Recheck Cond: (l_partkey = 67890)
+  Filter: (ANY (l_suppkey = (hashed SubPlan 1).col1))
+  Rows Removed by Filter: 21
+  Heap Blocks: exact=21
+  Buffers: shared hit=25
+  ->  Bitmap Index Scan on idx_lineitem_partkey  (cost=0.00..4.66 rows=30 width=0) (actual time=0.009..0.009 rows=21.00 loops=1)
+        Index Cond: (l_partkey = 67890)
+        Index Searches: 1
+        Buffers: shared hit=3
+  SubPlan 1
+    ->  Seq Scan on rls_mapping  (cost=0.00..1.01 rows=1 width=4) (actual time=0.063..0.064 rows=1.00 loops=1)
+          Disabled: true
+          Filter: (db_user = CURRENT_USER)
+          Buffers: shared hit=1
+Planning Time: 0.070 ms
+Execution Time: 0.121 ms
+
+================================================================================
+
+--- Test Case: Missing (Key: -1) ---
+QUERY OUTPUT:
+(No rows returned)
+
+QUERY PLAN:
+Bitmap Heap Scan on lineitem  (cost=5.68..124.65 rows=15 width=113) (actual time=0.006..0.007 rows=0.00 loops=1)
+  Recheck Cond: (l_partkey = '-1'::integer)
+  Filter: (ANY (l_suppkey = (hashed SubPlan 1).col1))
+  Buffers: shared hit=3
+  ->  Bitmap Index Scan on idx_lineitem_partkey  (cost=0.00..4.66 rows=30 width=0) (actual time=0.004..0.004 rows=0.00 loops=1)
+        Index Cond: (l_partkey = '-1'::integer)
+        Index Searches: 1
+        Buffers: shared hit=3
+  SubPlan 1
+    ->  Seq Scan on rls_mapping  (cost=0.00..1.01 rows=1 width=4) (never executed)
+          Disabled: true
+          Filter: (db_user = CURRENT_USER)
+Planning Time: 0.050 ms
+Execution Time: 0.023 ms
+
+================================================================================
+
